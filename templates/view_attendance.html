@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1 class="text-center">Attendance for {{ employee.name }} (ID: {{ employee.employee_id }})</h1>
+    <form method="post" class="mt-3 row g-3">
+        {{ form.hidden_tag() }}
+        <div class="col-md-4">
+            {{ form.month.label(class="form-label") }}
+            {{ form.month(class="form-select") }}
+        </div>
+        <div class="col-md-4">
+            {{ form.year.label(class="form-label") }}
+            {{ form.year(class="form-select") }}
+        </div>
+        <div class="col-md-4 align-self-end">
+            {{ form.submit(class="btn btn-primary w-100") }}
+        </div>
+    </form>
+    <div id="calendar" class="mt-4"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                initialDate: new Date({{ year }}, {{ month - 1 }}, 1),
+                events: '/api/attendance/{{ employee.id }}',
+                headerToolbar: {
+                    left: 'prev,next',
+                    center: 'title',
+                    right: ''
+                }
+            });
+            calendar.render();
+        });
+    </script>
+    <a href="{{ url_for('employee_list') }}" class="btn btn-secondary mt-3">Back to Employees</a>
+{% endblock %}

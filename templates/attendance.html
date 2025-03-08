@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1 class="text-center">Attendance for {{ employee.name }} (ID: {{ employee.employee_id }})</h1>
+    <p class="text-center">{{ message }}</p>
+    <div class="text-center mt-4">
+        <form method="post" action="{{ url_for('check_in', employee_id=employee.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-success">Check In</button>
+        </form>
+        <form method="post" action="{{ url_for('check_out', employee_id=employee.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-warning">Check Out</button>
+        </form>
+    </div>
+{% endblock %}

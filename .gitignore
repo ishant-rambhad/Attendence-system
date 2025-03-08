@@ -1,0 +1,53 @@
+# Byte-compiled / cached files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual environment
+venv/
+env/
+env310/
+*.env
+*.venv
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Logs and database files
+*.log
+*.sqlite3
+*.db
+*.sqlite
+*.json
+
+# Testing and coverage
+.tox/
+.nox/
+.coverage
+coverage.xml
+*.cover
+*.py,cover
+*.pytest_cache/
+htmlcov/
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.iml
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Dependency files
+Pipfile
+Pipfile.lock
+requirements.txt
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
+*.eggs/

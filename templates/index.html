@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1 class="text-center">Employee Attendance</h1>
+    <div class="text-center">
+        <video id="video" width="640" height="480" autoplay class="mb-3"></video>
+        <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+        <button id="capture" class="btn btn-primary">Scan Face</button>
+    </div>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('capture');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => video.srcObject = stream)
+            .catch(err => alert('Camera access denied: ' + err));
+
+        captureButton.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, 640, 480);
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append('image', blob, 'capture.jpg');
+                fetch('/recognize', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = `/attendance/${data.employee_id}`;
+                    } else {
+                        alert(data.message || 'Face not recognized.');
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

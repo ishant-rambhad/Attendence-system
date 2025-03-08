@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+    <div class="dashboard-header mb-4">
+        <div>
+            <h1 class="display-6">Admin Dashboard</h1>
+            <p class="text-muted">Welcome to Sambhavai Attendance System</p>
+        </div>
+        <div class="user-profile d-flex align-items-center">
+            <img src="https://via.placeholder.com/40" alt="Admin" class="rounded-circle me-2">
+            <div>
+                <strong>Admin</strong><br>
+                <small class="text-muted">HR@sambhavai.com</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card p-3 text-center">
+                <i class="fas fa-users fa-2x text-primary mb-3"></i>
+                <h5 class="text-muted">Total Employees</h5>
+                <div class="fs-2 fw-bold">24</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 text-center">
+                <i class="fas fa-user-check fa-2x text-success mb-3"></i>
+                <h5 class="text-muted">Present Today</h5>
+                <div class="fs-2 fw-bold">21</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 text-center">
+                <i class="fas fa-user-times fa-2x text-danger mb-3"></i>
+                <h5 class="text-muted">Absent Today</h5>
+                <div class="fs-2 fw-bold">3</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 text-center">
+                <i class="fas fa-percentage fa-2x text-info mb-3"></i>
+                <h5 class="text-muted">Attendance Rate</h5>
+                <div class="fs-2 fw-bold">87.5%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Activity -->
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5>Monthly Attendance Summary</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5>Recent Activity</h5>
+                </div>
+                <div class="card-body overflow-auto" style="max-height: 300px;">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">Rahul Singh checked in</h6>
+                                <small class="text-muted">3 mins ago</small>
+                            </div>
+                            <small class="text-muted">Today at 09:02 AM</small>
+                        </div>
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">Priya Sharma checked in</h6>
+                                <small class="text-muted">12 mins ago</small>
+                            </div>
+                            <small class="text-muted">Today at 08:53 AM</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'Full Day',
+                        data: [20, 22, 21, 23],
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Half Day',
+                        data: [2, 1, 3, 1],
+                        backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Number of Employees' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}
