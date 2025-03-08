@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Capture Live Face{% endblock %}
+{% block content %}
+    <div class="card mx-auto" style="max-width: 600px;">
+        <div class="card-header bg-white">
+            <h1 class="text-center mb-0">Capture Face</h1>
+        </div>
+        <div class="card-body text-center">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <p>Position your face in front of the camera and press "Capture" when ready.</p>
+            <img src="{{ url_for('video_feed') }}" class="img-fluid mb-3" style="max-width: 100%;">
+            <form method="post">
+                <button type="submit" class="btn btn-primary w-100">Capture</button>
+            </form>
+            <a href="{{ url_for('add_employee') }}" class="btn btn-secondary w-100 mt-2">Cancel</a>
+        </div>
+    </div>
+{% endblock %}
