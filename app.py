@@ -664,17 +664,31 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
 
+# class EmployeeForm(FlaskForm):
+#     name = StringField('Name', validators=[DataRequired()])
+#     employee_id = StringField('Employee ID', validators=[DataRequired()])
+#     face_image = FileField('Face Image', validators=[DataRequired()])
+#     submit = SubmitField('Add Employee')
+
 class EmployeeForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     employee_id = StringField('Employee ID', validators=[DataRequired()])
-    face_image = FileField('Face Image', validators=[DataRequired()])
     submit = SubmitField('Add Employee')
+
 
 # Database Models
 class Admin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
+
+# class Employee(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     emp_id = db.Column(db.String(20), unique=True, nullable=False)
+#     name = db.Column(db.String(100), nullable=False)
+#     face_encoding = db.Column(db.Text, nullable=True)
+#     face_image_path = db.Column(db.String(200), nullable=True)
+#     created_at = db.Column(db.DateTime, default=datetime.now)
 
 class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -956,16 +970,46 @@ def manage_employees():
 #         return redirect(url_for('manage_employees'))
     
 #     return render_template('add_employee.html', form=form)
-import os
-import base64
-import re
-import numpy as np
-import cv2
-from datetime import datetime
-from flask import render_template, redirect, url_for, flash, session, request
-from werkzeug.utils import secure_filename
-from werkzeug.datastructures import FileStorage
-from io import BytesIO
+
+# @app.route('/add_employee', methods=['GET', 'POST'])
+# def add_employee():
+#     if not session.get('admin_logged_in'):
+#         return redirect(url_for('admin_login'))
+    
+#     form = EmployeeForm()
+#     if form.validate_on_submit():
+#         emp_id = form.employee_id.data
+#         name = form.name.data
+#         face_image = form.face_image.data
+        
+#         existing_employee = Employee.query.filter_by(emp_id=emp_id).first()
+#         if existing_employee:
+#             flash('Employee ID already exists', 'danger')
+#             return render_template('add_employee.html', form=form)
+        
+#         filename = secure_filename(f"{emp_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg")
+#         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#         face_image.save(file_path)
+        
+#         face_encoding = encode_face(file_path)
+#         if not face_encoding:
+#             flash('No face detected in the uploaded image', 'danger')
+#             os.remove(file_path)
+#             return render_template('add_employee.html', form=form)
+        
+#         new_employee = Employee(
+#             emp_id=emp_id,
+#             name=name,
+#             face_encoding=face_encoding,
+#             face_image_path=os.path.join('faces', filename)
+#         )
+#         db.session.add(new_employee)
+#         db.session.commit()
+        
+#         flash('Employee added successfully', 'success')
+#         return redirect(url_for('manage_employees'))
+    
+#     return render_template('add_employee.html', form=form)
 
 @app.route('/add_employee', methods=['GET', 'POST'])
 def add_employee():
@@ -973,68 +1017,64 @@ def add_employee():
         return redirect(url_for('admin_login'))
     
     form = EmployeeForm()
-    # Remove the face_image field validation since we're capturing it directly
-    form.face_image = None
-    
-    if request.method == 'POST':
-        if form.validate():
-            emp_id = form.employee_id.data
-            name = form.name.data
-            captured_image_data = request.form.get('captured_image')
-            
-            # Check if image data exists
-            if not captured_image_data or captured_image_data == '':
-                flash('No image captured. Please capture an employee face image.', 'danger')
-                return render_template('add_employee.html', form=form)
-            
-            # Check if employee ID already exists
-            existing_employee = Employee.query.filter_by(emp_id=emp_id).first()
-            if existing_employee:
-                flash('Employee ID already exists', 'danger')
-                return render_template('add_employee.html', form=form)
-            
-            try:
-                # Extract the base64 data
-                image_data = re.sub('^data:image/.+;base64,', '', captured_image_data)
-                image_bytes = base64.b64decode(image_data)
-                
-                # Create a file-like object
-                image_file = BytesIO(image_bytes)
-                
-                # Generate unique filename
-                filename = secure_filename(f"{emp_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg")
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                
-                # Save the image to file
-                with open(file_path, 'wb') as f:
-                    f.write(image_bytes)
-                
-                # Verify face detection in the saved image
-                face_encoding = encode_face(file_path)
-                if not face_encoding:
-                    flash('No face detected in the captured image', 'danger')
-                    os.remove(file_path)
-                    return render_template('add_employee.html', form=form)
-                
-                # Save employee to database
-                new_employee = Employee(
-                    emp_id=emp_id,
-                    name=name,
-                    face_encoding=face_encoding,
-                    face_image_path=os.path.join('faces', filename)
-                )
-                db.session.add(new_employee)
-                db.session.commit()
-                
-                flash('Employee added successfully', 'success')
-                return redirect(url_for('manage_employees'))
-                
-            except Exception as e:
-                flash(f'Error processing image: {str(e)}', 'danger')
-                return render_template('add_employee.html', form=form)
-        else:
-            # Form validation failed
+    if form.validate_on_submit():
+        emp_id = form.employee_id.data
+        name = form.name.data
+        
+        # Get the base64 image data
+        captured_image_data = request.form.get('captured_image')
+        if not captured_image_data:
+            flash('No face image captured', 'danger')
             return render_template('add_employee.html', form=form)
+        
+        # Process the base64 image data
+        # Remove the data:image/jpeg;base64, prefix
+        image_data = captured_image_data.split(',')[1]
+        
+        # Decode the base64 data
+        image_binary = base64.b64decode(image_data)
+        
+        # Convert to numpy array for face recognition
+        nparr = np.frombuffer(image_binary, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        # Save the image
+        filename = secure_filename(f"{emp_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg")
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        cv2.imwrite(file_path, img)
+        
+        # Convert to RGB for face_recognition library
+        rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        
+        # Get face encoding
+        face_locations = face_recognition.face_locations(rgb_img)
+        if not face_locations:
+            flash('No face detected in the captured image', 'danger')
+            os.remove(file_path)
+            return render_template('add_employee.html', form=form)
+        
+        face_encoding = face_recognition.face_encodings(rgb_img, face_locations)[0]
+        encoded_face = base64.b64encode(face_encoding.tobytes()).decode('utf-8')
+        
+        # Check if employee ID already exists
+        existing_employee = Employee.query.filter_by(emp_id=emp_id).first()
+        if existing_employee:
+            flash('Employee ID already exists', 'danger')
+            os.remove(file_path)
+            return render_template('add_employee.html', form=form)
+        
+        # Create and save new employee
+        new_employee = Employee(
+            emp_id=emp_id,
+            name=name,
+            face_encoding=encoded_face,
+            face_image_path=os.path.join('faces', filename)
+        )
+        db.session.add(new_employee)
+        db.session.commit()
+        
+        flash('Employee added successfully', 'success')
+        return redirect(url_for('manage_employees'))
     
     return render_template('add_employee.html', form=form)
 
