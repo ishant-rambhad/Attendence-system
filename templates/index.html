@@ -1,39 +1,105 @@
-<!-- {% extends "base.html" %} -->
-{% block content %}
-    <h1 class="text-center">Employee Attendance</h1>
-    <div class="text-center">
-        <video id="video" width="640" height="480" autoplay class="mb-3"></video>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Attendance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 700px;
+            margin-top: 50px;
+        }
+        #video-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #video {
+            border-radius: 10px;
+            border: 3px solid #007bff;
+        }
+        #capture {
+            width: 200px;
+            margin-top: 10px;
+        }
+        #message {
+            margin-top: 15px;
+            font-weight: bold;
+            color: red;
+        }
+        .spinner-border {
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container text-center">
+    <h2 class="mb-4">Employee Attendance</h2>
+    
+    <div id="video-container">
+        <video id="video" width="640" height="480" autoplay></video>
         <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
-        <button id="capture" class="btn btn-primary">Scan Face</button>
     </div>
-    <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const captureButton = document.getElementById('capture');
 
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => video.srcObject = stream)
-            .catch(err => alert('Camera access denied: ' + err));
+    <button id="capture" class="btn btn-primary">Scan Face</button>
+    <div class="spinner-border text-primary" role="status" id="loading">
+        <span class="visually-hidden">Processing...</span>
+    </div>
+    
+    <p id="message"></p>
+</div>
 
-        captureButton.addEventListener('click', () => {
-            const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, 640, 480);
-            canvas.toBlob(blob => {
-                const formData = new FormData();
-                formData.append('image', blob, 'capture.jpg');
-                fetch('/recognize', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = `/attendance/${data.employee_id}`;
-                    } else {
-                        alert(data.message || 'Face not recognized.');
-                    }
-                });
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureButton = document.getElementById('capture');
+    const message = document.getElementById('message');
+    const loading = document.getElementById('loading');
+
+    // Access Camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => video.srcObject = stream)
+        .catch(err => message.innerText = "Camera access denied: " + err);
+
+    captureButton.addEventListener('click', () => {
+        message.innerText = "";
+        loading.style.display = "block"; // Show loading indicator
+
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, 640, 480);
+        canvas.toBlob(blob => {
+            const formData = new FormData();
+            formData.append('image', blob, 'capture.jpg');
+
+            fetch('/recognize', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = "none"; // Hide loading
+                if (data.success) {
+                    window.location.href = `/attendance/${data.employee_id}`;
+                } else {
+                    message.innerText = data.message || "Face not recognized.";
+                }
+            })
+            .catch(error => {
+                loading.style.display = "none";
+                message.innerText = "An error occurred. Please try again.";
             });
         });
-    </script>
-{% endblock %}
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

@@ -956,7 +956,6 @@ def manage_employees():
 #         return redirect(url_for('manage_employees'))
     
 #     return render_template('add_employee.html', form=form)
-
 import os
 import base64
 import re
