@@ -46,7 +46,6 @@ Thumbs.db
 # Dependency files
 Pipfile
 Pipfile.lock
-requirements.txt
 
 # Build and distribution
 build/
