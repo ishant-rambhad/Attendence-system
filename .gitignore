@@ -9,6 +9,8 @@ __pycache__/
 venv/
 env/
 env310/
+dlib/
+faces/
 *.env
 *.venv
 
@@ -51,3 +53,4 @@ build/
 dist/
 *.egg-info/
 *.eggs/
+.qodo

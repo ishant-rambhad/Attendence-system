@@ -28,6 +28,13 @@ db = SQLAlchemy(app)
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Login')
+
+# class EmployeeForm(FlaskForm):
+#     name = StringField('Name', validators=[DataRequired()])
+#     employee_id = StringField('Employee ID', validators=[DataRequired()])
+#     face_image = FileField('Face Image', validators=[DataRequired()])
+#     submit = SubmitField('Add Employee')
 
 class EmployeeForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
@@ -41,6 +48,13 @@ class Admin(db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
 
+# class Employee(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     emp_id = db.Column(db.String(20), unique=True, nullable=False)
+#     name = db.Column(db.String(100), nullable=False)
+#     face_encoding = db.Column(db.Text, nullable=True)
+#     face_image_path = db.Column(db.String(200), nullable=True)
+#     created_at = db.Column(db.DateTime, default=datetime.now)
 
 class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -301,31 +315,25 @@ def add_employee():
         
         try:
             # Process the base64 image data
-            # Remove the data:image/jpeg;base64, prefix
             image_data = captured_image_data.split(',')[1]
-            
-            # Decode the base64 data
             image_binary = base64.b64decode(image_data)
             
             # Convert to numpy array for face recognition
             nparr = np.frombuffer(image_binary, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             
-            # Check if the image is valid
-            if img is None:
-                raise ValueError("Invalid image data")
+            # Ensure the image is in 8-bit RGB format
+            if img is None or img.ndim != 3 or img.shape[2] != 3:
+                raise RuntimeError("Unsupported image type, must be 8bit RGB image.")
             
             # Convert to RGB for face_recognition library
             rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             
-            # Ensure the image is in the correct format
-            if rgb_img is None or len(rgb_img.shape) != 3 or rgb_img.shape[2] != 3:
-                raise ValueError("Unsupported image type, must be 8bit gray or RGB image")
-            
             # Get face encoding
             face_locations = face_recognition.face_locations(rgb_img)
             if not face_locations:
-                raise ValueError("No face detected in the captured image")
+                flash('No face detected in the captured image', 'danger')
+                return render_template('add_employee.html', form=form)
             
             face_encoding = face_recognition.face_encodings(rgb_img, face_locations)[0]
             encoded_face = base64.b64encode(face_encoding.tobytes()).decode('utf-8')
@@ -333,13 +341,15 @@ def add_employee():
             # Check if employee ID already exists
             existing_employee = Employee.query.filter_by(emp_id=emp_id).first()
             if existing_employee:
-                raise ValueError("Employee ID already exists")
+                flash('Employee ID already exists', 'danger')
+                return render_template('add_employee.html', form=form)
             
-            # Create and save new employee
+            # Save the image
             filename = secure_filename(f"{emp_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg")
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             cv2.imwrite(file_path, img)
             
+            # Create and save new employee
             new_employee = Employee(
                 emp_id=emp_id,
                 name=name,
@@ -353,7 +363,7 @@ def add_employee():
             return redirect(url_for('manage_employees'))
         
         except Exception as e:
-            flash(str(e), 'danger')
+            flash(f'An error occurred: {str(e)}', 'danger')
             return render_template('add_employee.html', form=form)
     
     return render_template('add_employee.html', form=form)
